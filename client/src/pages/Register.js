@@ -109,7 +109,7 @@ const Register = () => {
             className="w-full border rounded-lg py-2 flex items-center justify-center hover:bg-gray-50"
           >
             <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5 mr-2" />
-            Google (Coming Soon)
+            Google
           </button>
           <button
             onClick={handleGitHubLogin}

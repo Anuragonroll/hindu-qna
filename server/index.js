@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const session = require('express-session');
 const passport = require('./config/passport');
 
 const app = express();
@@ -9,7 +10,13 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(session({
+  secret: process.env.JWT_SECRET || 'hindu-qna-secret',
+  resave: false,
+  saveUninitialized: false
+}));
 app.use(passport.initialize());
+app.use(passport.session());
 
 // Database connection
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/hindu-qna', {

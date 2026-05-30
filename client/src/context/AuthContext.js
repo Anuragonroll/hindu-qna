@@ -11,7 +11,10 @@ export const AuthProvider = ({ children }) => {
     const token = localStorage.getItem('token');
     if (token) {
       api.get('/auth/me')
-        .then(res => setUser(res.data))
+        .then(res => {
+          const u = res.data;
+          setUser({ ...u, id: u._id });
+        })
         .catch(() => localStorage.removeItem('token'))
         .finally(() => setLoading(false));
     } else {
@@ -22,21 +25,24 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     const res = await api.post('/auth/login', { email, password });
     localStorage.setItem('token', res.data.token);
-    setUser(res.data.user);
+    const u = res.data.user;
+    setUser({ ...u, id: u.id || u._id });
     return res.data;
   };
 
   const register = async (name, email, password) => {
     const res = await api.post('/auth/register', { name, email, password });
     localStorage.setItem('token', res.data.token);
-    setUser(res.data.user);
+    const u = res.data.user;
+    setUser({ ...u, id: u.id || u._id });
     return res.data;
   };
 
   const guruLogin = async (email, password) => {
     const res = await api.post('/auth/guru-login', { email, password });
     localStorage.setItem('token', res.data.token);
-    setUser(res.data.user);
+    const u = res.data.user;
+    setUser({ ...u, id: u.id || u._id });
     return res.data;
   };
 

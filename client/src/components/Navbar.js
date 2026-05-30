@@ -37,7 +37,7 @@ const Navbar = () => {
                   Ask Question
                 </Link>
                 <div className="flex items-center space-x-2">
-                  <Link to={`/profile/${user.id}`} className="flex items-center space-x-2 hover:text-orange-200">
+                  <Link to={`/profile/${user._id || user.id}`} className="flex items-center space-x-2 hover:text-orange-200">
                     <div className="w-8 h-8 bg-orange-400 rounded-full flex items-center justify-center">
                       {user.name?.charAt(0).toUpperCase()}
                     </div>
