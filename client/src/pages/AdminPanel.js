@@ -77,16 +77,6 @@ const AdminPanel = () => {
     }
   };
 
-  const handleRejectGuru = async (userId) => {
-    try {
-      await api.post('/admin/gurus/reject', { userId });
-      toast.success('Guru rejected');
-      fetchData();
-    } catch (error) {
-      toast.error('Error rejecting guru');
-    }
-  };
-
   if (!isAdmin()) {
     return (
       <div className="max-w-4xl mx-auto text-center py-12">
