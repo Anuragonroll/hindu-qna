@@ -202,14 +202,58 @@ const shlokas = [
   },
   {
     id: 'cc-adi-17-31',
-    book: 'Caitanya-caritāmṛta',
+    book: 'Caitanya-caritamrta',
     chapter: 'Adi',
     verse: 17.31,
     devanagari: 'हरे कृष्ण हरे कृष्ण कृष्ण कृष्ण हरे हरे\nहरे राम हरे राम राम राम हरे हरे',
-    transliteration: 'hare kṛṣṇa hare kṛṣṇa kṛṣṇa kṛṣṇa hare hare\nhare rāma hare rāma rāma rāma hare hare',
-    translation: 'Hare Kṛṣṇa, Hare Kṛṣṇa, Kṛṣṇa Kṛṣṇa, Hare Hare. Hare Rāma, Hare Rāma, Rāma Rāma, Hare Hare.',
+    transliteration: 'hare krsna hare krsna krsna krsna hare hare\nhare rama hare rama rama rama hare hare',
+    translation: 'Hare Krsna, Hare Krsna, Krsna Krsna, Hare Hare. Hare Rama, Hare Rama, Rama Rama, Hare Hare.',
     source: 'https://vedabase.io/en/library/cc/adi/17/31/',
     topics: ['chanting', 'hare krishna', 'mahamantra', 'japa', 'kirtan']
+  },
+  {
+    id: 'atharva-veda-11-3',
+    book: 'Atharva Veda',
+    chapter: 11,
+    verse: 3,
+    devanagari: 'ॐ भूर्भुवः स्वः\nतत्सवितुर्वरेण्यं\nभर्गो देवस्य धीमहि\nधियो यो नः प्रचोदयात्',
+    transliteration: 'om bhur bhuvah svah\ntat savitur varenyam\nbhargo devasya dhimahi\ndhiyo yo nah prachodayat',
+    translation: 'We meditate upon the glorious splendor of the divine light of the Sun God. May He illuminate our intellect.',
+    source: 'https://vedabase.io/en/library/sb/12/13/1/',
+    topics: ['om', 'gayatri mantra', 'vedas', 'prayer', 'meditation']
+  },
+  {
+    id: 'kaivalya-upanishad-7',
+    book: 'Kaivalya Upanishad',
+    chapter: 7,
+    verse: 1,
+    devanagari: 'ॐ असतो मा सद्गमय\nतमसो मा ज्योतिर्गमय\nमृत्योर्मा अमृतं गमय\nॐ शान्तिः शान्तिः शान्तिः',
+    transliteration: 'om asato ma sadgamaya\ntamaso ma jyotirgamaya\nmrityor ma amritam gamaya\nom shanti shanti shanti',
+    translation: 'Lead me from untruth to truth, from darkness to light, from death to immortality. Om peace, peace, peace.',
+    source: 'https://vedabase.io/en/library/sb/12/13/1/',
+    topics: ['om', 'peace mantra', 'upanishad', 'prayer', 'truth']
+  },
+  {
+    id: 'bg-10-25',
+    book: 'Bhagavad Gita',
+    chapter: 10,
+    verse: 25,
+    devanagari: 'महर्षीणां भृगुरहं गिरामस्म्येकमक्षरम्\nयज्ञानां जपयज्ञोऽस्मि स्थावराणां हिमालयः',
+    transliteration: 'maharsinam bhrgur aham giram asmy ekam aksharam\nyajnanam japa-yajno 'smi sthavaranam himalayah',
+    translation: 'Of the great sages I am Bhrgu. Of vibrations I am the transcendental Om. Of sacrifices I am the chanting of the holy names, and of immovable objects I am the Himalayas.',
+    source: 'https://vedabase.io/en/library/bg/10/25/',
+    topics: ['om', 'krishna', 'sacred', 'vibration', 'himalayas']
+  },
+  {
+    id: 'bg-7-8',
+    book: 'Bhagavad Gita',
+    chapter: 7,
+    verse: 8,
+    devanagari: 'प्रणवः सर्ववेदेषु शब्दः खे पौरुषं नृषु\nप्रयो यज्ञे थवीर्होमो ज्यौतिर्धाता विधाता महाः',
+    transliteration: 'pranavah sarva-vedesu sabdah khae purusam nrshu\nprayo yajne thavir homa jyotir dhata vidhata mahah',
+    translation: 'I am the syllable Om in all the Vedas, sound in ether, and ability in man. I am the original sound in all prayers, and I am the potency in demigod worship.',
+    source: 'https://vedabase.io/en/library/bg/7/8/',
+    topics: ['om', 'krishna', 'vedas', 'sound', 'sacred']
   }
 ];
 
