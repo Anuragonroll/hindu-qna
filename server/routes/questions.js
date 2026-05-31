@@ -10,18 +10,26 @@ const { auth } = require('../middleware/auth');
 // AI answer generation function
 async function generateAIAnswer(questionId, title, body) {
   try {
-    const prompt = `You are a Hinduism expert. Answer this question concisely.
+    const shlokas = require('../utils/shlokas');
+    const shlokaRef = shlokas.map(s => 
+      `--- ${s.book} ${s.chapter}.${s.verse} ---\nDevanagari: ${s.devanagari}\nTransliteration: ${s.transliteration}\nTranslation: ${s.translation}\nSource: ${s.source}\nTopics: ${s.topics.join(', ')}`
+    ).join('\n\n');
 
-Question: ${title}
-Details: ${body}
-
-Rules:
-1. Cite scriptures with chapter/verse
-2. Format shlokas in \`\`\`sanskrit code blocks
-3. Mention source websites at the end
-4. Keep answer focused and helpful
-
-Sources to cite: Hinduism Stack Exchange, The Spiritual Scientist, Vedic Scriptures Online, ISKCON Desire Tree, Hindu Website`;
+    const prompt = [
+      'You are a Hinduism expert. Answer this question concisely.',
+      '',
+      'CRITICAL RULES:',
+      '1. ONLY use the shlokas provided below. NEVER fabricate shlokas.',
+      '2. Format shlokas in ```sanskrit code blocks with EXACT text from reference.',
+      '3. Always cite the vedabase.io source URL.',
+      '4. If no relevant shloka exists, say so honestly.',
+      '',
+      `Question: ${title}`,
+      `Details: ${body}`,
+      '',
+      'SHLOKA REFERENCE (use ONLY these):',
+      shlokaRef
+    ].join('\n');
 
     let aiMessage = '';
 
