@@ -11,7 +11,17 @@ const { auth } = require('../middleware/auth');
 async function generateAIAnswer(questionId, title, body) {
   try {
     const shlokas = require('../utils/shlokas');
-    const shlokaRef = shlokas.map(s => 
+    
+    // Only include shlokas relevant to the question
+    const questionWords = (title + ' ' + body).toLowerCase().split(/\s+/);
+    const relevantShlokas = shlokas.filter(s => 
+      s.topics.some(t => questionWords.some(w => t.toLowerCase().includes(w) || w.includes(t.toLowerCase())))
+    ).slice(0, 5);
+    
+    // If no relevant shlokas, include first 3 as general reference
+    const shlokasToShow = relevantShlokas.length > 0 ? relevantShlokas : shlokas.slice(0, 3);
+    
+    const shlokaRef = shlokasToShow.map(s => 
       `--- ${s.book} ${s.chapter}.${s.verse} ---\nDevanagari: ${s.devanagari}\nTransliteration: ${s.transliteration}\nTranslation: ${s.translation}\nSource: ${s.source}\nTopics: ${s.topics.join(', ')}`
     ).join('\n\n');
 
@@ -40,8 +50,8 @@ async function generateAIAnswer(questionId, title, body) {
         const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
         const completion = await groq.chat.completions.create({
           messages: [{ role: 'user', content: prompt }],
-          model: 'llama-3.3-70b-versatile',
-          max_tokens: 4000,
+          model: 'llama-3.1-8b-instant',
+          max_tokens: 2000,
           temperature: 0.7
         });
         aiMessage = completion.choices[0].message.content;
