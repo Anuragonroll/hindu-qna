@@ -239,7 +239,7 @@ const shlokas = [
     chapter: 10,
     verse: 25,
     devanagari: 'महर्षीणां भृगुरहं गिरामस्म्येकमक्षरम्\nयज्ञानां जपयज्ञोऽस्मि स्थावराणां हिमालयः',
-    transliteration: 'maharsinam bhrgur aham giram asmy ekam aksharam\nyajnanam japa-yajno 'smi sthavaranam himalayah',
+    transliteration: 'maharsinam bhrgur aham giram asmy ekam aksharam\nyajnanam japa-yajno \'smi sthavaranam himalayah',
     translation: 'Of the great sages I am Bhrgu. Of vibrations I am the transcendental Om. Of sacrifices I am the chanting of the holy names, and of immovable objects I am the Himalayas.',
     source: 'https://vedabase.io/en/library/bg/10/25/',
     topics: ['om', 'krishna', 'sacred', 'vibration', 'himalayas']
