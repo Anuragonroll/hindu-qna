@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const Groq = require('groq-sdk');
 const AIChat = require('../models/AIChat');
 const Question = require('../models/Question');
 const { auth } = require('../middleware/auth');
@@ -8,8 +9,11 @@ const { auth } = require('../middleware/auth');
 let genAI;
 if (process.env.GEMINI_API_KEY) {
   genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-} else {
-  console.log('Gemini API key not configured');
+}
+
+let groq;
+if (process.env.GROQ_API_KEY) {
+  groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 }
 
 // System prompt for Hindu Q&A
@@ -96,56 +100,59 @@ router.post('/chat', auth, async (req, res) => {
 
     let assistantMessage;
 
-    if (!genAI || !process.env.GEMINI_API_KEY) {
-      assistantMessage = `Thank you for your question about "${message}".
+    const messages = [
+      { role: 'system', content: systemPrompt + context },
+      ...chat.messages.slice(-4).map(m => ({ role: m.role, content: m.content }))
+    ];
 
-The AI assistant is not configured yet. Here's what I can tell you:
-
-**About Hindu Q&A:**
-This is a community-driven platform for authentic answers about Hinduism. You can:
-- Search existing questions on the topic
-- Ask the community directly
-- Consult Hindu scriptures like the Bhagavad Gita, Upanishads, or Puranas
-
-**Related questions from our community:**
-${relatedQuestions.map((q, i) => `${i + 1}. ${q.title}`).join('\n') || 'No related questions found yet.'}
-
-*Note: To enable AI, add GEMINI_API_KEY to the server .env file*`;
-    } else {
+    // Try Groq first (fast, generous free tier)
+    if (groq && process.env.GROQ_API_KEY) {
       try {
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
+        const completion = await groq.chat.completions.create({
+          messages,
+          model: 'llama-3.3-70b-versatile',
+          max_tokens: 4000,
+          temperature: 0.7
+        });
+        assistantMessage = completion.choices[0].message.content;
+      } catch (groqError) {
+        console.error('Groq API error:', groqError.message);
+      }
+    }
 
+    // Fallback to Gemini
+    if (!assistantMessage && genAI && process.env.GEMINI_API_KEY) {
+      try {
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
         const chatHistory = chat.messages.slice(-4).map(msg => ({
           role: msg.role === 'assistant' ? 'model' : 'user',
           parts: [{ text: msg.content }]
         }));
-
         const chatSession = model.startChat({
           history: [
             { role: 'user', parts: [{ text: 'You are a Hinduism expert.' }] },
             { role: 'model', parts: [{ text: 'Ready to answer Hinduism questions.' }] },
-            ...chatHistory.slice(-4)
+            ...chatHistory
           ],
-          generationConfig: {
-            maxOutputTokens: 4000,
-            temperature: 0.7,
-          }
+          generationConfig: { maxOutputTokens: 4000, temperature: 0.7 }
         });
-
-        const fullPrompt = systemPrompt + context + '\n\nUser question: ' + message;
-        const result = await chatSession.sendMessage(fullPrompt);
+        const result = await chatSession.sendMessage(systemPrompt + context + '\n\nUser question: ' + message);
         assistantMessage = result.response.text();
-      } catch (aiError) {
-        console.error('Gemini API error:', aiError.message);
-        assistantMessage = `Thank you for your question about "${message}".
+      } catch (geminiError) {
+        console.error('Gemini API error:', geminiError.message);
+      }
+    }
 
-I apologize, but the AI service encountered an error. Here's what I can tell you:
+    // Fallback message
+    if (!assistantMessage) {
+      assistantMessage = `Thank you for your question about "${message}".
+
+The AI assistant is temporarily unavailable. Here's what I can tell you:
 
 **Related questions from our community:**
 ${relatedQuestions.map((q, i) => `${i + 1}. ${q.title}`).join('\n') || 'No related questions found yet.'}
 
 Please try again later or search the existing questions on the platform.`;
-      }
     }
 
     chat.messages.push({ role: 'assistant', content: assistantMessage });

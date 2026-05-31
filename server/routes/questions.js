@@ -10,12 +10,6 @@ const { auth } = require('../middleware/auth');
 // AI answer generation function
 async function generateAIAnswer(questionId, title, body) {
   try {
-    const { GoogleGenerativeAI } = require('@google/generative-ai');
-    if (!process.env.GEMINI_API_KEY) return;
-
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
-
     const prompt = `You are a Hinduism expert. Answer this question concisely.
 
 Question: ${title}
@@ -29,8 +23,39 @@ Rules:
 
 Sources to cite: Hinduism Stack Exchange, The Spiritual Scientist, Vedic Scriptures Online, ISKCON Desire Tree, Hindu Website`;
 
-    const result = await model.generateContent(prompt);
-    const aiMessage = result.response.text();
+    let aiMessage = '';
+
+    // Try Groq first
+    if (process.env.GROQ_API_KEY) {
+      try {
+        const Groq = require('groq-sdk');
+        const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+        const completion = await groq.chat.completions.create({
+          messages: [{ role: 'user', content: prompt }],
+          model: 'llama-3.3-70b-versatile',
+          max_tokens: 4000,
+          temperature: 0.7
+        });
+        aiMessage = completion.choices[0].message.content;
+      } catch (e) {
+        console.error('Groq AI answer error:', e.message);
+      }
+    }
+
+    // Fallback to Gemini
+    if (!aiMessage && process.env.GEMINI_API_KEY) {
+      try {
+        const { GoogleGenerativeAI } = require('@google/generative-ai');
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+        const result = await model.generateContent(prompt);
+        aiMessage = result.response.text();
+      } catch (e) {
+        console.error('Gemini AI answer error:', e.message);
+      }
+    }
+
+    if (!aiMessage) return;
 
     // Create AI answer
     const aiAnswer = new Answer({
