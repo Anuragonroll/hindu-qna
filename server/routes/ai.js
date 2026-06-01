@@ -240,9 +240,9 @@ router.post('/chat', auth, async (req, res) => {
     res.json({
       message: assistantMessage,
       relatedQuestions,
-      sources: relevantShlokas.map((s) => ({
-        label: `${s.book} ${s.chapter}.${s.verse}`,
-        url: s.source,
+      sources: verses.map((v) => ({
+        label: verseLabel(v),
+        url: v.url,
       })),
       sessionId: chat.sessionId
     });
