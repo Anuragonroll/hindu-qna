@@ -230,7 +230,7 @@ router.post('/chat', auth, async (req, res) => {
       .replace(/https?:\/\/[^\s)]*/g, '')
       .replace(/en\/library\/[^\s)]+/g, '')
       .replace(/\[.*?\]\(.*?\)/g, '')
-      .replace(/(?:Recommended reading|Further reading|To learn more|You can also read|For deeper|Please read the full purport)[\s\S]*$/gim, '')
+      .replace(/(?:^|\n)(?:Sources?|References?|Recommended reading|Further reading|To learn more|You can also read|For deeper|Please read the full purport)[\s\S]*$/gim, '')
       .replace(/\n{3,}/g, '\n\n')
       .trim();
 
