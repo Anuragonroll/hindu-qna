@@ -224,15 +224,13 @@ router.post('/chat', auth, async (req, res) => {
       assistantMessage = `Thank you for your question about "${message}". The AI assistant is temporarily unavailable. Please try again later or search the existing questions on the platform.`;
     }
 
-    // Clean up: remove fake links, invented references, and "Recommended reading" lines
+    // Clean up: remove fake links, invented references, and reading recommendation blocks
     // (references are returned separately as sources buttons)
     assistantMessage = assistantMessage
       .replace(/https?:\/\/[^\s)]*/g, '')
       .replace(/en\/library\/[^\s)]+/g, '')
       .replace(/\[.*?\]\(.*?\)/g, '')
-      .replace(/Recommended reading:?.*$/gim, '')
-      .replace(/Further reading:?.*$/gim, '')
-      .replace(/You can also read.*$/gim, '')
+      .replace(/(?:Recommended reading|Further reading|To learn more|You can also read|For deeper|Please read the full purport)[\s\S]*$/gim, '')
       .replace(/\n{3,}/g, '\n\n')
       .trim();
 
