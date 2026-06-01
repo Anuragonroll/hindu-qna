@@ -112,15 +112,14 @@ const systemPrompt = `You are a knowledgeable and compassionate Hindu scripture 
 
 GUIDELINES:
 - Ground every answer in the scripture context provided to you
-- Cite the specific book/chapter/verse (e.g. "Bhagavad Gita 2.47")
+- Cite the specific book/chapter/verse (e.g. "Bhagavad Gita 2.47") inline in your explanation
 - Explain Sanskrit terms clearly when they appear
 - Keep a warm, devotional, and respectful tone
 - For deep questions, include both the verse and relevant purport insights
-- End by encouraging the user to read the full purport on vedabase.io
 - Cover different traditions and perspectives within Hinduism
 - If asked something outside Vedic scripture, gently redirect
 
-You will receive relevant verses from the database as context. Use them as your primary source.`;
+IMPORTANT: Do NOT include "Recommended reading", "Further reading", or any list of references at the end. Source links are shown automatically as clickable buttons below your response.`;
 
 // ─── Semantic search for related community questions ──────────────────────────
 async function semanticSearch(query, limit = 3) {
@@ -225,11 +224,15 @@ router.post('/chat', auth, async (req, res) => {
       assistantMessage = `Thank you for your question about "${message}". The AI assistant is temporarily unavailable. Please try again later or search the existing questions on the platform.`;
     }
 
-    // Clean up: remove fake links and invented references
+    // Clean up: remove fake links, invented references, and "Recommended reading" lines
+    // (references are returned separately as sources buttons)
     assistantMessage = assistantMessage
       .replace(/https?:\/\/[^\s)]*/g, '')
       .replace(/en\/library\/[^\s)]+/g, '')
       .replace(/\[.*?\]\(.*?\)/g, '')
+      .replace(/Recommended reading:?.*$/gim, '')
+      .replace(/Further reading:?.*$/gim, '')
+      .replace(/You can also read.*$/gim, '')
       .replace(/\n{3,}/g, '\n\n')
       .trim();
 
