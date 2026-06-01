@@ -7,24 +7,63 @@ const passport = require('./config/passport');
 
 const app = express();
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// Security: Validate required environment variables
+const requiredEnvVars = ['MONGODB_URI', 'JWT_SECRET'];
+for (const envVar of requiredEnvVars) {
+  if (!process.env[envVar]) {
+    console.error(`FATAL: Missing required environment variable: ${envVar}`);
+    process.exit(1);
+  }
+}
+
+// Security: Restricted CORS
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  'http://localhost:3000',
+  'http://localhost:3001',
+].filter(Boolean);
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
+
+// Rate limiting (simple in-memory implementation)
+const rateLimit = require('./middleware/rateLimit');
+app.use('/api/auth', rateLimit({ windowMs: 15 * 60 * 1000, max: 20 })); // 20 requests per 15min for auth
+app.use('/api/ai', rateLimit({ windowMs: 60 * 1000, max: 10 })); // 10 requests per minute for AI
+app.use('/api/questions', rateLimit({ windowMs: 60 * 1000, max: 30 })); // 30 requests per minute
+
+app.use(express.json({ limit: '1mb' }));
 app.use(session({
-  secret: process.env.JWT_SECRET || 'hindu-qna-secret',
+  secret: process.env.JWT_SECRET,
   resave: false,
-  saveUninitialized: false
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+  }
 }));
 app.use(passport.initialize());
 app.use(passport.session());
 
 // Database connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/hindu-qna', {
+mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
 .then(() => console.log('MongoDB connected'))
-.catch(err => console.error('MongoDB connection error:', err));
+.catch(err => {
+  console.error('MongoDB connection error:', err);
+  process.exit(1);
+});
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
@@ -39,9 +78,22 @@ app.use('/api/ai', require('./routes/ai'));
 app.use('/api/reviews', require('./routes/reviews'));
 app.use('/api/bounties', require('./routes/bounties'));
 
+// Health check
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// 404 handler
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ message: 'API endpoint not found' });
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
+  if (err.message === 'Not allowed by CORS') {
+    return res.status(403).json({ message: 'CORS policy violation' });
+  }
   res.status(500).json({ message: 'Something went wrong!' });
 });
 

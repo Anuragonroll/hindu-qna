@@ -1,12 +1,21 @@
 const express = require('express');
 const router = express.Router();
+const { body, validationResult } = require('express-validator');
 const Question = require('../models/Question');
 const User = require('../models/User');
+const Answer = require('../models/Answer');
 const { auth } = require('../middleware/auth');
 
 // Create bounty
-router.post('/:questionId', auth, async (req, res) => {
+router.post('/:questionId', auth, [
+  body('amount').isInt({ min: 5, max: 500 }).withMessage('Bounty amount must be between 5 and 500')
+], async (req, res) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
     const { amount } = req.body;
     const question = await Question.findById(req.params.questionId);
 
@@ -68,10 +77,13 @@ router.post('/:questionId/award/:answerId', auth, async (req, res) => {
     question.bountyWinner = req.params.answerId;
     await question.save();
 
-    // Give reputation to winner
-    await User.findByIdAndUpdate(req.params.answerId, {
-      $inc: { reputation: question.bountyAmount }
-    });
+    // Give reputation to winner (find the answer author)
+    const answer = await Answer.findById(req.params.answerId);
+    if (answer) {
+      await User.findByIdAndUpdate(answer.author, {
+        $inc: { reputation: question.bountyAmount }
+      });
+    }
 
     res.json({ message: 'Bounty awarded' });
   } catch (error) {

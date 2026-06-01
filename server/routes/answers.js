@@ -7,7 +7,9 @@ const User = require('../models/User');
 const { auth } = require('../middleware/auth');
 
 // Create answer - only gurus/scholars/admins can post
-router.post('/:questionId', auth, async (req, res) => {
+router.post('/:questionId', auth, [
+  body('body').trim().isLength({ min: 10, max: 10000 }).withMessage('Answer must be between 10 and 10000 characters')
+], async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -110,8 +112,15 @@ router.delete('/:id', auth, async (req, res) => {
 });
 
 // Vote on answer
-router.post('/:id/vote', auth, async (req, res) => {
+router.post('/:id/vote', auth, [
+  body('type').isIn(['upvote', 'downvote']).withMessage('Vote type must be upvote or downvote')
+], async (req, res) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
     const { type } = req.body;
     const answer = await Answer.findById(req.params.id);
     

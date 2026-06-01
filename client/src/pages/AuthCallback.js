@@ -1,22 +1,26 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 
 const AuthCallback = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { fetchUser } = useAuth();
 
   useEffect(() => {
     const token = searchParams.get('token');
     if (token) {
       localStorage.setItem('token', token);
-      toast.success('Logged in successfully!');
-      navigate('/');
+      fetchUser().then(() => {
+        toast.success('Logged in successfully!');
+        navigate('/');
+      });
     } else {
       toast.error('Authentication failed');
       navigate('/login');
     }
-  }, [searchParams, navigate]);
+  }, [searchParams, navigate, fetchUser]);
 
   return (
     <div className="min-h-screen flex items-center justify-center">

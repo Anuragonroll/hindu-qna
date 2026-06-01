@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import ReactMarkdown from 'react-markdown';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import MarkdownRenderer from '../components/MarkdownRenderer';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
-import { FiSend, FiMessageSquare } from 'react-icons/fi';
+import { FiSend, FiMessageSquare, FiExternalLink } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
 const AIChat = () => {
@@ -47,42 +45,19 @@ const AIChat = () => {
       setMessages(prev => [...prev, { 
         role: 'assistant', 
         content: res.data.message,
-        relatedQuestions: res.data.relatedQuestions
+        relatedQuestions: res.data.relatedQuestions,
+        sources: res.data.sources || []
       }]);
     } catch (error) {
       toast.error('Error getting response from AI');
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: 'Sorry, I encountered an error. Please try again.' 
+        content: 'Sorry, I encountered an error. Please try again.',
+        sources: []
       }]);
     }
     setLoading(false);
   };
-
-  const renderMarkdown = (content) => (
-    <ReactMarkdown
-      components={{
-        code: ({ node, inline, className, children, ...props }) => {
-          const match = /language-(\w+)/.exec(className || '');
-          if (!inline && match) {
-            return (
-              <SyntaxHighlighter
-                style={tomorrow}
-                language={match[1]}
-                PreTag="div"
-                {...props}
-              >
-                {String(children).replace(/\n$/, '')}
-              </SyntaxHighlighter>
-            );
-          }
-          return <code className={className} {...props}>{children}</code>;
-        }
-      }}
-    >
-      {content}
-    </ReactMarkdown>
-  );
 
   if (!user) {
     return (
@@ -124,21 +99,41 @@ const AIChat = () => {
               
               {messages.map((msg, index) => (
                 <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[80%] rounded-lg p-4 ${
+                  <div className={`max-w-[80%] rounded-lg p-4 overflow-hidden ${
                     msg.role === 'user' 
                       ? 'bg-orange-600 text-white' 
                       : 'bg-gray-100 text-gray-800'
                   }`}>
                     {msg.role === 'assistant' ? (
                       <div className="prose prose-sm max-w-none">
-                        {renderMarkdown(msg.content)}
+                        <MarkdownRenderer content={msg.content} />
                       </div>
                     ) : (
                       <p>{msg.content}</p>
                     )}
                     
+                    {msg.sources?.length > 0 && (
+                      <div className="mt-3 pt-3 border-t border-gray-200">
+                        <p className="text-xs font-semibold text-gray-500 mb-2">References:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {msg.sources.map((src, i) => (
+                            <a
+                              key={i}
+                              href={src.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 bg-orange-50 text-orange-700 text-xs px-2 py-1 rounded-full hover:bg-orange-100 border border-orange-200"
+                            >
+                              <FiExternalLink size={10} />
+                              {src.label}
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
                     {msg.relatedQuestions?.length > 0 && (
-                      <div className="mt-4 pt-4 border-t border-gray-200">
+                      <div className="mt-3 pt-3 border-t border-gray-200">
                         <p className="text-xs font-semibold text-gray-600 mb-2">Related questions:</p>
                         <ul className="text-xs space-y-1">
                           {msg.relatedQuestions.map(q => (

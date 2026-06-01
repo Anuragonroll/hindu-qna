@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import ReactMarkdown from 'react-markdown';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import MarkdownRenderer from '../components/MarkdownRenderer';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { FiArrowUp, FiArrowDown, FiCheck, FiMessageSquare, FiBookmark } from 'react-icons/fi';
@@ -120,32 +118,6 @@ const QuestionDetail = () => {
     }
   };
 
-  const renderMarkdown = (content) => (
-    <ReactMarkdown
-      components={{
-        code: ({ node, inline, className, children, ...props }) => {
-          const match = /language-(\w+)/.exec(className || '');
-          return !inline && match ? (
-            <SyntaxHighlighter
-              style={tomorrow}
-              language={match[1]}
-              PreTag="div"
-              {...props}
-            >
-              {String(children).replace(/\n$/, '')}
-            </SyntaxHighlighter>
-          ) : (
-            <code className={className} {...props}>
-              {children}
-            </code>
-          );
-        }
-      }}
-    >
-      {content}
-    </ReactMarkdown>
-  );
-
   if (loading) return <div className="text-center py-8">Loading...</div>;
   if (!question) return <div className="text-center py-8">Question not found</div>;
 
@@ -168,7 +140,7 @@ const QuestionDetail = () => {
           <div className="flex-1">
             <h1 className="text-2xl font-bold mb-4">{question.title}</h1>
             <div className="prose max-w-none mb-4">
-              {renderMarkdown(question.body)}
+              <MarkdownRenderer content={question.body} />
             </div>
             <div className="flex flex-wrap gap-2 mb-4">
               {question.tags?.map(tag => (
@@ -271,7 +243,7 @@ const QuestionDetail = () => {
             </div>
             <div className="flex-1">
               <div className="prose max-w-none mb-4">
-                {renderMarkdown(answer.body)}
+                <MarkdownRenderer content={answer.body} />
               </div>
               {answer.isVerifiedByGuru && answer.verificationNote && (
                 <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">

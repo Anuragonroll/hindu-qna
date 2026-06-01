@@ -225,6 +225,14 @@ router.post('/chat', auth, async (req, res) => {
       assistantMessage = `Thank you for your question about "${message}". The AI assistant is temporarily unavailable. Please try again later or search the existing questions on the platform.`;
     }
 
+    // Clean up: remove fake links and invented references
+    assistantMessage = assistantMessage
+      .replace(/https?:\/\/[^\s)]*/g, '')
+      .replace(/en\/library\/[^\s)]+/g, '')
+      .replace(/\[.*?\]\(.*?\)/g, '')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+
     chat.messages.push({ role: 'assistant', content: assistantMessage });
     chat.context = { relatedQuestions: relatedQuestions.map((q) => q._id) };
     await chat.save();
@@ -232,12 +240,11 @@ router.post('/chat', auth, async (req, res) => {
     res.json({
       message: assistantMessage,
       relatedQuestions,
-      sources: verses.map((v) => ({
-        label: verseLabel(v),
-        translation: v.translation?.slice(0, 120) + '...',
-        url: v.url,
+      sources: relevantShlokas.map((s) => ({
+        label: `${s.book} ${s.chapter}.${s.verse}`,
+        url: s.source,
       })),
-      sessionId: chat.sessionId,
+      sessionId: chat.sessionId
     });
   } catch (error) {
     console.error('AI chat error:', error);

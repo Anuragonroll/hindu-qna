@@ -7,19 +7,25 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchUser = async () => {
     const token = localStorage.getItem('token');
     if (token) {
-      api.get('/auth/me')
-        .then(res => {
-          const u = res.data;
-          setUser({ ...u, id: u._id });
-        })
-        .catch(() => localStorage.removeItem('token'))
-        .finally(() => setLoading(false));
+      try {
+        const res = await api.get('/auth/me');
+        const u = res.data;
+        setUser({ ...u, id: u._id });
+      } catch {
+        localStorage.removeItem('token');
+        setUser(null);
+      }
     } else {
-      setLoading(false);
+      setUser(null);
     }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchUser();
   }, []);
 
   const login = async (email, password) => {
@@ -55,7 +61,7 @@ export const AuthProvider = ({ children }) => {
   const isAdmin = () => user && user.role === 'admin';
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, guruLogin, logout, isGuru, isAdmin }}>
+    <AuthContext.Provider value={{ user, loading, login, register, guruLogin, logout, isGuru, isAdmin, fetchUser }}>
       {children}
     </AuthContext.Provider>
   );
