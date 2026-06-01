@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import api from '../utils/api';
-import { FiClock, FiTrendingUp, FiMessageSquare } from 'react-icons/fi';
+import { FiClock, FiTrendingUp, FiMessageSquare, FiSearch } from 'react-icons/fi';
 
 const Questions = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -12,10 +12,16 @@ const Questions = () => {
   const currentSort = searchParams.get('sort') || 'newest';
   const currentTag = searchParams.get('tag') || '';
   const searchQuery = searchParams.get('search') || '';
+  const [searchInput, setSearchInput] = useState(searchQuery);
 
   useEffect(() => {
     fetchQuestions();
   }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    setSearchParams({ sort: currentSort, tag: currentTag, search: searchInput, page: 1 });
+  };
 
   const fetchQuestions = async () => {
     setLoading(true);
@@ -51,6 +57,36 @@ const Questions = () => {
       <div className="flex flex-col md:flex-row gap-6">
         <div className="md:w-3/4">
           <div className="bg-white rounded-lg shadow-md p-4 mb-4">
+            <form onSubmit={handleSearch} className="flex gap-2 mb-4">
+              <div className="flex-1 relative">
+                <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  placeholder="Search questions..."
+                  className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </div>
+              <button
+                type="submit"
+                className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700"
+              >
+                Search
+              </button>
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchInput('');
+                    setSearchParams({ sort: currentSort, tag: currentTag, page: 1 });
+                  }}
+                  className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300"
+                >
+                  Clear
+                </button>
+              )}
+            </form>
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => handleSort('newest')}
@@ -113,16 +149,42 @@ const Questions = () => {
           )}
 
           {pagination.totalPages > 1 && (
-            <div className="flex justify-center space-x-2 mt-6">
-              {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(page => (
-                <button
-                  key={page}
-                  onClick={() => setSearchParams({ page, sort: currentSort, tag: currentTag })}
-                  className={`px-4 py-2 rounded-lg ${page === pagination.page ? 'bg-orange-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
-                >
-                  {page}
-                </button>
-              ))}
+            <div className="flex justify-center items-center space-x-2 mt-6">
+              <button
+                onClick={() => setSearchParams({ page: Math.max(1, pagination.page - 1), sort: currentSort, tag: currentTag, search: searchQuery })}
+                disabled={pagination.page === 1}
+                className="px-3 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
+              {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                let pageNum;
+                if (pagination.totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (pagination.page <= 3) {
+                  pageNum = i + 1;
+                } else if (pagination.page >= pagination.totalPages - 2) {
+                  pageNum = pagination.totalPages - 4 + i;
+                } else {
+                  pageNum = pagination.page - 2 + i;
+                }
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => setSearchParams({ page: pageNum, sort: currentSort, tag: currentTag, search: searchQuery })}
+                    className={`px-4 py-2 rounded-lg ${pageNum === pagination.page ? 'bg-orange-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+              <button
+                onClick={() => setSearchParams({ page: Math.min(pagination.totalPages, pagination.page + 1), sort: currentSort, tag: currentTag, search: searchQuery })}
+                disabled={pagination.page === pagination.totalPages}
+                className="px-3 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
             </div>
           )}
         </div>
