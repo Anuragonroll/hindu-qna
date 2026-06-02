@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import api from '../utils/api';
+import UserBadge from '../components/UserBadge';
 import { FiClock, FiTrendingUp, FiMessageSquare, FiSearch } from 'react-icons/fi';
 
 const Questions = () => {
@@ -144,7 +145,7 @@ const Questions = () => {
                       </div>
                       <div className="flex items-center justify-between mt-4 text-sm text-gray-500">
                         <span>
-                          asked by {question.author?.name} • {new Date(question.createdAt).toLocaleDateString()}
+                          asked by {question.author?.name}<UserBadge author={question.author} max={1} /> • {new Date(question.createdAt).toLocaleDateString()}
                         </span>
                       </div>
                     </div>

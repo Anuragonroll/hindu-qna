@@ -38,6 +38,7 @@ const Navbar = () => {
             {link('/questions', 'Questions')}
             {link('/tags', 'Tags')}
             {link('/gurus', 'Gurus')}
+            {link('/users', 'Users')}
             {link('/chat', 'AI Chat', <FiMessageSquare />)}
             {link('/bounties', 'Bounties')}
             {isGuru() && link('/guru', 'Guru Portal')}
@@ -51,7 +52,7 @@ const Navbar = () => {
                   Ask Question
                 </Link>
                 <div className="flex items-center space-x-2">
-                  <Link to={`/profile/${user._id || user.id}`} className="flex items-center space-x-2 hover:text-orange-200">
+                  <Link to={`/users/${user._id || user.id}`} className="flex items-center space-x-2 hover:text-orange-200">
                     <div className="w-8 h-8 bg-orange-400 rounded-full flex items-center justify-center">
                       {user.name?.charAt(0).toUpperCase()}
                     </div>
@@ -83,11 +84,12 @@ const Navbar = () => {
       </div>
 
       {open && (
-        <div className="md:hidden bg-orange-600 border-t border-orange-500">
+          <div className="md:hidden bg-orange-600 border-t border-orange-500">
           <div className="container mx-auto px-4 py-4 flex flex-col space-y-3">
             {link('/questions', 'Questions')}
             {link('/tags', 'Tags')}
             {link('/gurus', 'Gurus')}
+            {link('/users', 'Users')}
             {link('/chat', 'AI Chat', <FiMessageSquare />)}
             {link('/bounties', 'Bounties')}
             {isGuru() && link('/guru', 'Guru Portal')}
@@ -96,7 +98,7 @@ const Navbar = () => {
               {user ? (
                 <>
                   <Link
-                    to={`/profile/${user._id || user.id}`}
+                    to={`/users/${user._id || user.id}`}
                     onClick={close}
                     className="block py-1 text-sm"
                   >

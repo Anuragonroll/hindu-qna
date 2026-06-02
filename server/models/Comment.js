@@ -21,14 +21,26 @@ const commentSchema = new mongoose.Schema({
     required: true,
     enum: ['Question', 'Answer']
   },
+  parent: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Comment',
+    default: null
+  },
+  replies: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Comment'
+  }],
   upvotes: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  likes: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   }],
   badge: {
     type: String,
-    enum: ['insightful', 'helpful', 'scriptural', 'clarification', 'verified'],
-    default: null
+    enum: ['insightful', 'helpful', 'scriptural', 'clarification', 'verified']
   },
   badgedBy: {
     type: mongoose.Schema.Types.ObjectId,
@@ -46,3 +58,4 @@ const commentSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model('Comment', commentSchema);
+

@@ -6,6 +6,7 @@ const Question = require('../models/Question');
 const User = require('../models/User');
 const { auth } = require('../middleware/auth');
 const { resolveShlokaReferences } = require('../utils/shlokaRef');
+const { evaluateAndAward } = require('../utils/badges');
 
 // Create answer - only gurus/scholars/admins can post
 router.post('/:questionId', auth, [
@@ -60,6 +61,9 @@ router.post('/:questionId', auth, [
     // Add reputation
     req.user.reputation += 10;
     await req.user.save();
+
+    // Evaluate and award any new badges
+    try { await evaluateAndAward(req.user); } catch (e) { console.error('Badge eval failed:', e.message); }
 
     // If the author is a guru, bump guru stats
     if (['guru', 'acharya'].includes(req.user.role)) {

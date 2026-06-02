@@ -7,6 +7,7 @@ const Answer = require('../models/Answer');
 const Tag = require('../models/Tag');
 const User = require('../models/User');
 const { auth } = require('../middleware/auth');
+const { evaluateAndAward } = require('../utils/badges');
 
 // ─── MongoDB connection for vedabase database ────────────────────────────────
 let vedabaseClient;
@@ -325,6 +326,9 @@ router.post('/', auth, [
     // Add reputation
     req.user.reputation += 5;
     await req.user.save();
+
+    // Evaluate and award any new badges
+    try { await evaluateAndAward(req.user); } catch (e) { console.error('Badge eval failed:', e.message); }
 
     // Auto-generate AI answer in background
     generateAIAnswer(question._id, title, body).catch(err => 

@@ -4,6 +4,7 @@ const User = require('../models/User');
 const Question = require('../models/Question');
 const Answer = require('../models/Answer');
 const { auth } = require('../middleware/auth');
+const { listAllBadges, getBadgeMeta, evaluateAndAward } = require('../utils/badges');
 
 // Get all users
 router.get('/', async (req, res) => {
@@ -42,6 +43,21 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
+    // Re-evaluate badges on profile view so newly earned ones show up
+    try { await evaluateAndAward(user); } catch (e) { console.error('Badge eval on profile:', e.message); }
+    const fresh = await User.findById(req.params.id).select('-password');
+
+    // Enrich badges with metadata (icon, color, description) from catalog
+    const enrichedBadges = (fresh.badges || []).map(b => {
+      const meta = getBadgeMeta(b.name);
+      return {
+        ...b.toObject(),
+        icon: meta?.icon,
+        color: meta?.color,
+        description: meta?.description
+      };
+    });
+
     // Get user's questions
     const questions = await require('../models/Question').find({ author: req.params.id })
       .populate('tags', 'name')
@@ -54,7 +70,7 @@ router.get('/:id', async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(50);
 
-    res.json({ ...user.toObject(), questions, answers });
+    res.json({ ...fresh.toObject(), badges: enrichedBadges, questions, answers });
   } catch (error) {
     console.error('Profile error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -173,10 +189,22 @@ router.get('/:id/badges', async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    res.json(user.badges);
+    // Re-evaluate on view
+    try { await evaluateAndAward(user); } catch (e) {}
+    const fresh = await User.findById(req.params.id).select('badges name avatar');
+    const enriched = (fresh.badges || []).map(b => {
+      const meta = getBadgeMeta(b.name);
+      return { ...b.toObject(), icon: meta?.icon, color: meta?.color, description: meta?.description };
+    });
+    res.json(enriched);
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
+});
+
+// List all available badges in the catalog
+router.get('/_badges/catalog', async (req, res) => {
+  res.json(listAllBadges());
 });
 
 module.exports = router;

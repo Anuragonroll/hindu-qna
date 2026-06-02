@@ -45,7 +45,8 @@ const userSchema = new mongoose.Schema({
   },
   badges: [{
     name: String,
-    type: { type: String, enum: ['bronze', 'silver', 'gold', 'special'] },
+    key: String,
+    type: { type: String, enum: ['milestone', 'engagement', 'recognition', 'reputation', 'special'] },
     awardedAt: { type: Date, default: Date.now }
   }],
   privileges: [String],

@@ -5,6 +5,7 @@ import ShlokaCard from '../components/ShlokaCard';
 import ShlokaAutocomplete from '../components/ShlokaAutocomplete';
 import CommentsList from '../components/CommentsList';
 import GuruTagManager from '../components/GuruTagManager';
+import UserBadge from '../components/UserBadge';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { FiArrowUp, FiArrowDown, FiCheck, FiBookmark, FiTrash2, FiInfo } from 'react-icons/fi';
@@ -175,6 +176,10 @@ const QuestionDetail = () => {
             <div className="prose max-w-none mb-4">
               <MarkdownRenderer content={question.body} />
             </div>
+            <div className="text-sm text-gray-500 mb-3">
+              asked by <span className="font-medium text-orange-600">{question.author?.name}</span>
+              <UserBadge author={question.author} max={2} />
+            </div>
             <div className="flex flex-wrap gap-2 mb-2">
               {question.tags?.map(tag => (
                 <Link key={tag._id} to={`/tags/${tag.name}`} className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs hover:bg-orange-200">
@@ -277,7 +282,7 @@ const QuestionDetail = () => {
                     </button>
                   )}
                 </div>
-                <span>answered {new Date(answer.createdAt).toLocaleDateString()}</span>
+                <span>by <span className="font-medium text-orange-600">{answer.author?.name}</span><UserBadge author={answer.author} max={2} /> · {new Date(answer.createdAt).toLocaleDateString()}</span>
               </div>
             </div>
           </div>

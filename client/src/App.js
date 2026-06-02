@@ -12,6 +12,7 @@ import AskQuestion from './pages/AskQuestion';
 import Tags from './pages/Tags';
 import TagDetail from './pages/TagDetail';
 import Users from './pages/Users';
+import UserProfile from './pages/UserProfile';
 import Profile from './pages/Profile';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -39,6 +40,7 @@ function App() {
                 <Route path="/tags" element={<Tags />} />
                 <Route path="/tags/:name" element={<TagDetail />} />
                 <Route path="/users" element={<Users />} />
+                <Route path="/users/:id" element={<UserProfile />} />
                 <Route path="/profile/:id" element={<Profile />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
