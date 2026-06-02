@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
-import { FiCheck, FiX, FiAward, FiClock } from 'react-icons/fi';
+import { FiCheck, FiX, FiAward, FiClock, FiInfo, FiEdit, FiStar } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
 const GuruPortal = () => {
   const { user, isGuru } = useAuth();
   const [dashboard, setDashboard] = useState(null);
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('pending');
 
@@ -17,6 +18,7 @@ const GuruPortal = () => {
       return;
     }
     fetchDashboard();
+    fetchProfile();
   }, [isGuru]);
 
   const fetchDashboard = async () => {
@@ -26,6 +28,15 @@ const GuruPortal = () => {
     } catch (error) {
       toast.error('Error loading dashboard');
     }
+  };
+
+  const fetchProfile = async () => {
+    try {
+      const res = await api.get('/guru/profile');
+      setProfile(res.data);
+    } catch (error) {
+      // profile may not exist yet
+    }
     setLoading(false);
   };
 
@@ -33,13 +44,8 @@ const GuruPortal = () => {
     try {
       await api.post(`/guru/verify/${answerId}`, { note });
       toast.success('Answer verified!');
-      const verifiedAnswer = dashboard.pendingVerifications.find(a => a._id === answerId);
-      setDashboard(prev => ({
-        ...prev,
-        pendingVerifications: prev.pendingVerifications.filter(a => a._id !== answerId),
-        verifiedByMe: verifiedAnswer ? [{ ...verifiedAnswer, isVerifiedByGuru: true, verifiedAt: new Date().toISOString(), verificationNote: note }, ...prev.verifiedByMe] : prev.verifiedByMe,
-        stats: { ...prev.stats, pendingCount: Math.max(0, prev.stats.pendingCount - 1), verifiedCount: (prev.stats.verifiedCount || 0) + 1 }
-      }));
+      fetchDashboard();
+      fetchProfile();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Error verifying answer');
     }
@@ -49,12 +55,8 @@ const GuruPortal = () => {
     try {
       await api.post(`/guru/unverify/${answerId}`);
       toast.success('Verification removed');
-      setDashboard(prev => ({
-        ...prev,
-        verifiedByMe: prev.verifiedByMe.filter(a => a._id !== answerId),
-        pendingVerifications: [...prev.pendingVerifications, prev.verifiedByMe.find(a => a._id === answerId)].filter(Boolean),
-        stats: { ...prev.stats, verifiedCount: Math.max(0, (prev.stats.verifiedCount || 0) - 1), pendingCount: (prev.stats.pendingCount || 0) + 1 }
-      }));
+      fetchDashboard();
+      fetchProfile();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Error removing verification');
     }
@@ -76,13 +78,89 @@ const GuruPortal = () => {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <h1 className="text-3xl font-bold">Guru Portal</h1>
         <div className="flex items-center space-x-2">
           <FiAward className="text-yellow-500" size={24} />
           <span className="font-semibold">{user.role?.charAt(0).toUpperCase() + user.role?.slice(1)}</span>
         </div>
       </div>
+
+      <div className="bg-gradient-to-br from-orange-50 to-yellow-50 border border-orange-200 rounded-lg p-4 mb-6">
+        <div className="flex items-start gap-3">
+          <FiInfo className="text-orange-700 mt-0.5" size={20} />
+          <div className="text-sm text-orange-900 flex-1">
+            <div className="font-semibold mb-1">Your moderator powers</div>
+            <ul className="list-disc list-inside space-y-1 text-xs">
+              <li>Verify answers as a guru from the &quot;Pending Verification&quot; tab below.</li>
+              <li>On any question, you can <strong>add or remove tags</strong> and <strong>delete the question</strong> if it breaks etiquette.</li>
+              <li>On any comment, hover to <strong>badge it</strong> as Insightful / Helpful / Scriptural / Clarification / Verified.</li>
+              <li>When you post an answer, type <code className="bg-white px-1 rounded">@BG 7.8</code> (or <code className="bg-white px-1 rounded">@SB 1.2.3</code>) to auto-attach the shloka from vedabase.io.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {profile && (
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <div className="flex items-start gap-4">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-200 to-yellow-200 flex items-center justify-center text-orange-700 font-bold text-3xl flex-shrink-0 overflow-hidden">
+              {profile.photo ? (
+                <img src={profile.photo} alt={profile.displayName} className="w-full h-full object-cover" />
+              ) : (
+                profile.displayName?.charAt(0).toUpperCase()
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center flex-wrap gap-2">
+                <h2 className="text-2xl font-bold">
+                  {profile.honorific ? `${profile.honorific} ` : ''}{profile.displayName}
+                </h2>
+                {profile.tier === 'acharya' && <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-0.5 rounded">Acharya</span>}
+                {profile.tier === 'guru' && <span className="bg-purple-100 text-purple-800 text-xs px-2 py-0.5 rounded">Guru</span>}
+                {profile.isFeatured && <span className="bg-orange-100 text-orange-800 text-xs px-2 py-0.5 rounded flex items-center"><FiStar size={10} className="mr-1" /> Featured</span>}
+              </div>
+              {profile.sampradaya && <div className="text-sm text-gray-600 mt-1">{profile.sampradaya}</div>}
+              {profile.shortBio && <p className="text-sm text-gray-700 mt-2 italic">"{profile.shortBio}"</p>}
+              {profile.expertise?.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {profile.expertise.map((e, i) => (
+                    <span key={i} className="text-xs bg-orange-50 text-orange-800 px-2 py-0.5 rounded">{e}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+            <Link
+              to={`/profile/${user._id || user.id}`}
+              className="text-gray-500 hover:text-orange-600 flex items-center text-sm flex-shrink-0"
+              title="View public profile"
+            >
+              <FiEdit className="mr-1" /> View profile
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4 pt-4 border-t">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-orange-700">{profile.stats?.answersPosted || 0}</div>
+              <div className="text-xs text-gray-500">Answers Posted</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-700">{profile.stats?.answersVerified || 0}</div>
+              <div className="text-xs text-gray-500">Verified</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-purple-700">{profile.stats?.commentsBadged || 0}</div>
+              <div className="text-xs text-gray-500">Comments Badged</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-red-700">{profile.stats?.questionsModerated || 0}</div>
+              <div className="text-xs text-gray-500">Moderated</div>
+            </div>
+          </div>
+          <div className="text-xs text-gray-500 mt-3">
+            ✏️ To update your public profile, contact an admin — they can edit any field including bio, lineage, sampradaya, expertise, photo, and social links.
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white rounded-lg shadow-md p-6 text-center">

@@ -7,16 +7,18 @@ const Questions = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [pagination, setPagination] = useState({ page: 1, totalPages: 1 });
+  const [totalPages, setTotalPages] = useState(1);
 
   const currentSort = searchParams.get('sort') || 'newest';
   const currentTag = searchParams.get('tag') || '';
   const searchQuery = searchParams.get('search') || '';
+  const currentPage = parseInt(searchParams.get('page') || '1', 10);
   const [searchInput, setSearchInput] = useState(searchQuery);
 
   useEffect(() => {
     fetchQuestions();
-  }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentSort, currentTag, searchQuery, currentPage]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -27,14 +29,14 @@ const Questions = () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      params.set('page', pagination.page);
+      params.set('page', currentPage);
       params.set('sort', currentSort);
       if (currentTag) params.set('tag', currentTag);
       if (searchQuery) params.set('search', searchQuery);
 
       const res = await api.get(`/questions?${params}`);
       setQuestions(res.data.questions);
-      setPagination({ page: res.data.currentPage, totalPages: res.data.totalPages });
+      setTotalPages(res.data.totalPages);
     } catch (error) {
       console.error('Error fetching questions:', error);
     }
@@ -42,7 +44,11 @@ const Questions = () => {
   };
 
   const handleSort = (sort) => {
-    setSearchParams({ sort, tag: currentTag, search: searchQuery });
+    setSearchParams({ sort, tag: currentTag, search: searchQuery, page: 1 });
+  };
+
+  const goToPage = (p) => {
+    setSearchParams({ page: p, sort: currentSort, tag: currentTag, search: searchQuery });
   };
 
   return (
@@ -148,39 +154,39 @@ const Questions = () => {
             </div>
           )}
 
-          {pagination.totalPages > 1 && (
+          {totalPages > 1 && (
             <div className="flex justify-center items-center space-x-2 mt-6">
               <button
-                onClick={() => setSearchParams({ page: Math.max(1, pagination.page - 1), sort: currentSort, tag: currentTag, search: searchQuery })}
-                disabled={pagination.page === 1}
+                onClick={() => goToPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
                 className="px-3 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Previous
               </button>
-              {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                 let pageNum;
-                if (pagination.totalPages <= 5) {
+                if (totalPages <= 5) {
                   pageNum = i + 1;
-                } else if (pagination.page <= 3) {
+                } else if (currentPage <= 3) {
                   pageNum = i + 1;
-                } else if (pagination.page >= pagination.totalPages - 2) {
-                  pageNum = pagination.totalPages - 4 + i;
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
                 } else {
-                  pageNum = pagination.page - 2 + i;
+                  pageNum = currentPage - 2 + i;
                 }
                 return (
                   <button
                     key={pageNum}
-                    onClick={() => setSearchParams({ page: pageNum, sort: currentSort, tag: currentTag, search: searchQuery })}
-                    className={`px-4 py-2 rounded-lg ${pageNum === pagination.page ? 'bg-orange-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
+                    onClick={() => goToPage(pageNum)}
+                    className={`px-4 py-2 rounded-lg ${pageNum === currentPage ? 'bg-orange-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
                   >
                     {pageNum}
                   </button>
                 );
               })}
               <button
-                onClick={() => setSearchParams({ page: Math.min(pagination.totalPages, pagination.page + 1), sort: currentSort, tag: currentTag, search: searchQuery })}
-                disabled={pagination.page === pagination.totalPages}
+                onClick={() => goToPage(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
                 className="px-3 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Next

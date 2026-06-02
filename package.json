@@ -1,0 +1,18 @@
+{
+  "name": "pariprashna",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pariprashna (परिप्रश्न) - a community platform for authentic answers about Hinduism, Sanatan Dharma",
+  "scripts": {
+    "install:all": "npm install && npm install --prefix server && npm install --prefix client",
+    "dev": "concurrently -n SERVER,CLIENT -c blue,magenta \"npm run dev --prefix server\" \"npm start --prefix client\"",
+    "dev:server": "npm run dev --prefix server",
+    "dev:client": "npm start --prefix client",
+    "build": "npm run build --prefix client",
+    "start": "npm run start --prefix server",
+    "seed:gurus": "npm run seed:gurus --prefix server"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

@@ -10,11 +10,13 @@ import Questions from './pages/Questions';
 import QuestionDetail from './pages/QuestionDetail';
 import AskQuestion from './pages/AskQuestion';
 import Tags from './pages/Tags';
+import TagDetail from './pages/TagDetail';
 import Users from './pages/Users';
 import Profile from './pages/Profile';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import GuruPortal from './pages/GuruPortal';
+import Gurus from './pages/Gurus';
 import AdminPanel from './pages/AdminPanel';
 import AIChat from './pages/AIChat';
 import ReviewQueues from './pages/ReviewQueues';
@@ -35,12 +37,14 @@ function App() {
                 <Route path="/questions/ask" element={<AskQuestion />} />
                 <Route path="/questions/:id" element={<QuestionDetail />} />
                 <Route path="/tags" element={<Tags />} />
+                <Route path="/tags/:name" element={<TagDetail />} />
                 <Route path="/users" element={<Users />} />
                 <Route path="/profile/:id" element={<Profile />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/guru" element={<GuruPortal />} />
+                <Route path="/gurus" element={<Gurus />} />
                 <Route path="/admin" element={<AdminPanel />} />
                 <Route path="/chat" element={<AIChat />} />
                 <Route path="/reviews" element={<ReviewQueues />} />

@@ -25,6 +25,20 @@ const commentSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   }],
+  badge: {
+    type: String,
+    enum: ['insightful', 'helpful', 'scriptural', 'clarification', 'verified'],
+    default: null
+  },
+  badgedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  badgedAt: Date,
+  badgeNote: {
+    type: String,
+    default: ''
+  },
   createdAt: {
     type: Date,
     default: Date.now

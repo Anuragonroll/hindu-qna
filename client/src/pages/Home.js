@@ -29,7 +29,7 @@ const Home = () => {
   return (
     <div className="max-w-6xl mx-auto">
       <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg p-8 mb-8">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Hindu QnA</h1>
+        <h1 className="text-4xl font-bold mb-4">Welcome to Pariprashna</h1>
         <p className="text-xl mb-6">
           A community-driven platform for authentic answers about Hinduism, Sanatan Dharma, and related topics.
         </p>

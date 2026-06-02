@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import MarkdownRenderer from '../components/MarkdownRenderer';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
-import { FiSend, FiMessageSquare, FiExternalLink } from 'react-icons/fi';
+import { FiSend, FiMessageSquare, FiExternalLink, FiX } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
 const AIChat = () => {
@@ -10,8 +10,9 @@ const AIChat = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [sessionId] = useState(() => `session_${Date.now()}`);
+  const [sessionId, setSessionId] = useState(() => `session_${Date.now()}`);
   const [sessions, setSessions] = useState([]);
+  const [activeSessionLabel, setActiveSessionLabel] = useState('New chat');
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -28,6 +29,36 @@ const AIChat = () => {
       setSessions(res.data);
     } catch (error) {
       console.error('Error fetching sessions:', error);
+    }
+  };
+
+  const loadSession = async (sid) => {
+    setSessionId(sid);
+    setActiveSessionLabel(new Date(sid.replace('session_', '')).toLocaleString());
+    try {
+      const res = await api.get(`/ai/history/${sid}`);
+      setMessages(res.data.messages || []);
+    } catch {
+      setMessages([]);
+    }
+  };
+
+  const startNewChat = () => {
+    const sid = `session_${Date.now()}`;
+    setSessionId(sid);
+    setActiveSessionLabel('New chat');
+    setMessages([]);
+  };
+
+  const deleteSession = async (sid, e) => {
+    e.stopPropagation();
+    if (!window.confirm('Delete this chat?')) return;
+    try {
+      await api.delete(`/ai/sessions/${sid}`);
+      setSessions(prev => prev.filter(s => s.sessionId !== sid));
+      if (sid === sessionId) startNewChat();
+    } catch {
+      toast.error('Could not delete session');
     }
   };
 
@@ -70,16 +101,42 @@ const AIChat = () => {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">AI Hindu Assistant</h1>
+      <h1 className="text-3xl font-bold mb-2">AI Hindu Assistant</h1>
+      <p className="text-sm text-gray-500 mb-6">Chatting in: <span className="font-medium">{activeSessionLabel}</span></p>
       
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="md:col-span-1">
           <div className="bg-white rounded-lg shadow-md p-4">
-            <h3 className="font-bold mb-3">Sessions</h3>
-            <div className="space-y-2">
-              {sessions.map(session => (
-                <div key={session.sessionId} className="text-sm text-gray-600 hover:text-orange-600 cursor-pointer">
-                  {new Date(session.createdAt).toLocaleDateString()}
+            <button
+              onClick={startNewChat}
+              className="w-full bg-orange-600 text-white py-2 rounded-lg text-sm font-semibold hover:bg-orange-700 mb-3"
+            >
+              + New chat
+            </button>
+            <h3 className="font-bold mb-2 text-sm text-gray-700">Past sessions</h3>
+            <div className="space-y-1 max-h-96 overflow-y-auto">
+              {sessions.length === 0 ? (
+                <p className="text-xs text-gray-500">No previous chats</p>
+              ) : sessions.map(session => (
+                <div
+                  key={session.sessionId}
+                  onClick={() => loadSession(session.sessionId)}
+                  className={`flex items-center justify-between text-sm px-2 py-1.5 rounded cursor-pointer group ${
+                    session.sessionId === sessionId
+                      ? 'bg-orange-100 text-orange-800'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <span className="truncate">
+                    {new Date(session.createdAt).toLocaleDateString()}
+                  </span>
+                  <button
+                    onClick={(e) => deleteSession(session.sessionId, e)}
+                    className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700"
+                    title="Delete"
+                  >
+                    <FiX size={12} />
+                  </button>
                 </div>
               ))}
             </div>

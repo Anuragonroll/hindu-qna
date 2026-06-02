@@ -1,11 +1,12 @@
 {
-  "name": "hindu-qna-server",
+  "name": "pariprashna-server",
   "version": "1.0.0",
   "description": "Backend for Hindu Q&A platform",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "seed:gurus": "node scripts/seedGurus.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

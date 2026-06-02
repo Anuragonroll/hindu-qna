@@ -5,6 +5,7 @@ const Answer = require('../models/Answer');
 const Question = require('../models/Question');
 const User = require('../models/User');
 const { auth } = require('../middleware/auth');
+const { resolveShlokaReferences } = require('../utils/shlokaRef');
 
 // Create answer - only gurus/scholars/admins can post
 router.post('/:questionId', auth, [
@@ -36,6 +37,16 @@ router.post('/:questionId', auth, [
       question: question._id
     });
 
+    // Resolve and attach shloka references (e.g. @BG 7.8, @SB 1.2.3)
+    try {
+      const refs = await resolveShlokaReferences(req.body.body);
+      if (refs.length > 0) {
+        answer.shlokaReferences = refs;
+      }
+    } catch (e) {
+      console.error('Shloka resolution failed:', e.message);
+    }
+
     await answer.save();
 
     // Add to question's answers
@@ -49,6 +60,19 @@ router.post('/:questionId', auth, [
     // Add reputation
     req.user.reputation += 10;
     await req.user.save();
+
+    // If the author is a guru, bump guru stats
+    if (['guru', 'acharya'].includes(req.user.role)) {
+      try {
+        const Guru = require('../models/Guru');
+        await Guru.findOneAndUpdate(
+          { user: req.user._id },
+          { $inc: { 'stats.answersPosted': 1 } }
+        );
+      } catch (e) {
+        // ignore - guru profile may not exist
+      }
+    }
 
     const populatedAnswer = await Answer.findById(answer._id)
       .populate('author', 'name avatar reputation');

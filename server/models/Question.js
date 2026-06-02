@@ -49,6 +49,11 @@ const questionSchema = new mongoose.Schema({
     default: false
   },
   closeReason: String,
+  moderatedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  moderatedAt: Date,
   isProtected: {
     type: Boolean,
     default: false

@@ -1,6 +1,8 @@
-# Hindu QnA
+# Pariprashna · परिप्रश्न
 
-A full-stack Q&A platform for Hinduism, Sanatan Dharma, and related topics. Built with the MERN stack, featuring guru/scholar verification, AI-powered answers, and Stack Exchange-style features.
+A full-stack Q&A platform for Hinduism, Sanatan Dharma, and related topics. "Pariprashna" (परिप्रश्न) means *inquiry* in Sanskrit — a place to ask, to seek, and to find authentic answers.
+
+Built with the MERN stack, featuring guru/scholar verification, AI-powered answers (Groq + Gemini, grounded in vedabase.io scripture), and Stack Exchange-style features.
 
 ## Features
 
@@ -23,10 +25,10 @@ A full-stack Q&A platform for Hinduism, Sanatan Dharma, and related topics. Buil
 - Badge system (Bronze, Silver, Gold)
 
 ### AI Assistant
-- OpenAI GPT-4 powered chatbot
-- Semantic search for related questions
-- Shlokas formatted in code blocks
-- Scripture citations
+- Groq (llama-3.1-8b-instant) primary, Gemini 2.5 Flash fallback
+- Retrieval-augmented over the vedabase.io scripture database
+- Shlokas auto-attached when gurus type `@BG 7.8` or `@SB 1.2.3`
+- Scripture citations linked directly to vedabase.io
 
 ### Additional Features
 - Bounties for answers
@@ -36,68 +38,82 @@ A full-stack Q&A platform for Hinduism, Sanatan Dharma, and related topics. Buil
 
 ## Tech Stack
 
-- **Frontend:** React.js, Tailwind CSS
-- **Backend:** Node.js, Express.js
-- **Database:** MongoDB
-- **Auth:** Google OAuth, GitHub OAuth
-- **AI:** OpenAI API
+- **Frontend:** React.js, Tailwind CSS, react-markdown, prism syntax highlighter
+- **Backend:** Node.js, Express.js, JWT, Passport.js
+- **Database:** MongoDB (main DB + vedabase.io verses DB for RAG)
+- **Auth:** Email/password, Google OAuth, GitHub OAuth
+- **AI:** Groq SDK + Google Generative AI (Gemini)
+- **Scraper:** Cheerio (vedabase.io)
 
 ## Getting Started
 
 ### Prerequisites
 - Node.js (v18+)
-- MongoDB
-- OpenAI API key
+- MongoDB running on `mongodb://localhost:27017` (or update `MONGODB_URI`)
+- (Optional) Groq and/or Gemini API keys for AI features
 
-### Installation
+### One-time setup
 
-1. Clone the repository
 ```bash
-git clone <repo-url>
-cd hindu-qna
+# from the project root
+npm run install:all        # installs server + client deps, plus concurrently
+cp server/.env server/.env.local   # (optional) local overrides
 ```
 
-2. Install server dependencies
+### Run in development
+
 ```bash
-cd server
-npm install
+npm run dev                # starts server (port 5001) + client (port 3000) together
 ```
 
-3. Install client dependencies
+The React dev server proxies `/api/*` calls to the Express server, so CORS works out of the box. If you prefer to run them separately:
+
 ```bash
-cd ../client
-npm install
+npm run dev:server         # Express on http://localhost:5001
+npm run dev:client         # React on http://localhost:3000
 ```
 
-4. Create `.env` file in server directory
+### Seed the database
+
 ```bash
-cp .env.example .env
-# Edit .env with your credentials
+npm run seed:gurus         # creates ~20 verified gurus + 1 admin user
 ```
 
-5. Start development servers
-```bash
-# Terminal 1 - Server
-cd server
-npm run dev
+Default seeded credentials:
 
-# Terminal 2 - Client
-cd client
-npm start
+| Role  | Email                          | Password   |
+|-------|--------------------------------|------------|
+| Admin | `admin@pariprashna.local`        | `admin123` |
+| Guru  | `sarvapriyananda@pariprashna.local` | `guru123` |
+
+### Production build
+
+```bash
+npm run build              # builds the client into client/build
+NODE_ENV=production npm start  # server serves the built client on the same port
 ```
 
 ## Environment Variables
 
+`server/.env`:
+
 ```
-PORT=5000
-MONGODB_URI=mongodb://localhost:27017/hindu-qna
-JWT_SECRET=your_jwt_secret
+PORT=5001
+MONGODB_URI=mongodb://localhost:27017/pariprashna
+JWT_SECRET=any_long_random_string_change_me
 CLIENT_URL=http://localhost:3000
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-GITHUB_CLIENT_ID=your_github_client_id
-GITHUB_CLIENT_SECRET=your_github_client_secret
-OPENAI_API_KEY=your_openai_api_key
+GROQ_API_KEY=                 # optional, used for AI chat
+GEMINI_API_KEY=               # optional, fallback for AI chat
+GOOGLE_CLIENT_ID=             # optional, Google OAuth
+GOOGLE_CLIENT_SECRET=         # optional
+GITHUB_CLIENT_ID=             # optional, GitHub OAuth
+GITHUB_CLIENT_SECRET=         # optional
+```
+
+`client/.env` (optional, defaults to `http://localhost:5001/api`):
+
+```
+REACT_APP_API_URL=http://localhost:5001/api
 ```
 
 ## API Endpoints

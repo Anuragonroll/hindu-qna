@@ -25,6 +25,14 @@ const userSchema = new mongoose.Schema({
     enum: ['user', 'scholar', 'guru', 'acharya', 'admin'],
     default: 'user'
   },
+  isApprovedGuru: {
+    type: Boolean,
+    default: false
+  },
+  guruProfile: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Guru'
+  },
   provider: {
     type: String,
     enum: ['google', 'github', 'local'],

@@ -52,6 +52,21 @@ const answerSchema = new mongoose.Schema({
   },
   adminVerifiedAt: Date,
   adminNote: String,
+  shlokaReferences: [{
+    raw: { type: String },
+    book: { type: String },
+    chapter: { type: Number },
+    verse: { type: Number },
+    canto: { type: Number },
+    part: { type: Number },
+    mantra: { type: Number },
+    sanskrit: { type: String, default: '' },
+    iast: { type: String, default: '' },
+    translation: { type: String, default: '' },
+    purport: { type: String, default: '' },
+    url: { type: String, default: '' },
+    label: { type: String, default: '' }
+  }],
   comments: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Comment'
