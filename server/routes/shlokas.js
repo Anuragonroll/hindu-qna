@@ -186,4 +186,26 @@ router.get('/books', (req, res) => {
   })));
 });
 
+// GET /api/shlokas/stats -> verse counts per book + total
+router.get('/stats', async (req, res) => {
+  try {
+    const vedabase = await getDB();
+    const collection = vedabase.collection('verses');
+    const counts = await collection.aggregate([
+      { $group: { _id: '$book', count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]).toArray();
+    const stats = {};
+    let totalVerses = 0;
+    for (const c of counts) {
+      stats[c._id] = c.count;
+      totalVerses += c.count;
+    }
+    res.json({ stats, totalVerses });
+  } catch (err) {
+    console.error('Shloka stats error:', err.message);
+    res.status(500).json({ message: 'Stats failed' });
+  }
+});
+
 module.exports = router;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import MarkdownRenderer from '../components/MarkdownRenderer';
-import ShlokaCard from '../components/ShlokaCard';
+import AnswerBodyWithShlokas from '../components/AnswerBodyWithShlokas';
 import ShlokaAutocomplete from '../components/ShlokaAutocomplete';
 import CommentsList from '../components/CommentsList';
 import GuruTagManager from '../components/GuruTagManager';
@@ -250,20 +250,21 @@ const QuestionDetail = () => {
                 </div>
               )}
             </div>
-            <div className="flex-1">
-              <div className="prose max-w-none mb-4">
-                <MarkdownRenderer content={answer.body} />
-              </div>
-              {answer.shlokaReferences?.length > 0 && (
-                <div className="mt-4">
-                  <div className="text-xs font-semibold text-orange-700 uppercase tracking-wider mb-2">
-                    📚 {answer.shlokaReferences.length} Shloka{answer.shlokaReferences.length > 1 ? 's' : ''} Referenced
-                  </div>
-                  {answer.shlokaReferences.map((s, i) => (
-                    <ShlokaCard key={i} shloka={s} />
-                  ))}
+            <div className="flex-1 min-w-0">
+              {answer.isAIGenerated && (
+                <div className={`mb-3 inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded ${
+                  answer.isVerifiedByAdmin
+                    ? 'bg-green-50 text-green-700 border border-green-200'
+                    : 'bg-blue-50 text-blue-700 border border-blue-200'
+                }`}>
+                  {answer.isVerifiedByAdmin ? '✅ AI Verified' : '🤖 AI Generated'}
                 </div>
               )}
+              <AnswerBodyWithShlokas
+                content={answer.body}
+                shlokaReferences={!answer.isAIGenerated ? answer.shlokaReferences : []}
+                stripCodeBlocks={answer.isAIGenerated}
+              />
               {answer.isVerifiedByGuru && answer.verificationNote && (
                 <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
                   <p className="text-sm text-yellow-800">

@@ -25,10 +25,11 @@ const CONFIG = {
   DB_NAME: "vedabase",
   BASE_URL: "https://vedabase.io/en/library",
   // Be respectful — don't hammer their server
-  CONCURRENCY: 3,         // max parallel requests
-  DELAY_MS: 800,          // delay between requests (ms)
-  RETRY_ATTEMPTS: 3,      // retries on failure
-  RETRY_DELAY_MS: 2000,   // delay before retry
+  // Override via env vars: SCRAPER_CONCURRENCY, SCRAPER_DELAY_MS
+  CONCURRENCY: parseInt(process.env.SCRAPER_CONCURRENCY, 10) || 3,
+  DELAY_MS: parseInt(process.env.SCRAPER_DELAY_MS, 10) || 800,
+  RETRY_ATTEMPTS: 3,
+  RETRY_DELAY_MS: 2000,
 };
 
 // ─── BOOK STRUCTURE ───────────────────────────────────────────────────────────

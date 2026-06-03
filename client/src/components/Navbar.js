@@ -38,6 +38,7 @@ const Navbar = () => {
             {link('/questions', 'Questions')}
             {link('/tags', 'Tags')}
             {link('/gurus', 'Gurus')}
+            {link('/scriptures', 'Scriptures')}
             {link('/users', 'Users')}
             {link('/chat', 'AI Chat', <FiMessageSquare />)}
             {link('/bounties', 'Bounties')}
@@ -89,6 +90,7 @@ const Navbar = () => {
             {link('/questions', 'Questions')}
             {link('/tags', 'Tags')}
             {link('/gurus', 'Gurus')}
+            {link('/scriptures', 'Scriptures')}
             {link('/users', 'Users')}
             {link('/chat', 'AI Chat', <FiMessageSquare />)}
             {link('/bounties', 'Bounties')}

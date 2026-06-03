@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { body, validationResult } = require('express-validator');
-const { MongoClient } = require('mongodb');
+const mongoose = require('mongoose');
 const Question = require('../models/Question');
 const Answer = require('../models/Answer');
 const Tag = require('../models/Tag');
@@ -9,15 +9,12 @@ const User = require('../models/User');
 const { auth } = require('../middleware/auth');
 const { evaluateAndAward } = require('../utils/badges');
 
-// ─── MongoDB connection for vedabase database ────────────────────────────────
-let vedabaseClient;
+// ─── Vedabase database access via Mongoose's existing connection ─────────────
 let vedabaseDb;
 
-async function getVedabaseDB() {
+function getVedabaseDB() {
   if (!vedabaseDb) {
-    vedabaseClient = new MongoClient(process.env.MONGODB_URI);
-    await vedabaseClient.connect();
-    vedabaseDb = vedabaseClient.db('vedabase');
+    vedabaseDb = mongoose.connection.useDb('vedabase', { useCache: true });
   }
   return vedabaseDb;
 }
@@ -102,20 +99,22 @@ async function generateAIAnswer(questionId, title, body) {
     const verseContext = buildVerseContext(verses);
 
     const prompt = [
-      'You are a knowledgeable Hinduism expert and spiritual teacher. Answer this question thoroughly.',
+      'You are a knowledgeable Hinduism expert and spiritual teacher writing a forum answer.',
       '',
-      'GUIDELINES:',
-      '1. Answer the question comprehensively using your knowledge of Hindu scriptures.',
-      '2. When a relevant shloka is provided below, include it with exact Sanskrit text, transliteration, and translation in a ```sanskrit code block.',
-      '3. Always cite the vedabase.io source URL when using a provided shloka.',
-      '4. If no provided shloka is directly relevant, still answer fully from your knowledge.',
-      '5. Be respectful, accurate, and helpful.',
+      'OUTPUT FORMAT (strict):',
+      '1. Plain flowing prose. No code blocks, no fenced blocks, no tables.',
+      '2. When citing a scripture verse, use ONE short inline form:  "As the Bhagavad Gita 2.47 states: \\"You have a right to perform your prescribed duty, but you are not entitled to the fruits of action.\\""',
+      '3. Include ONLY the English translation in quotes. Do NOT include the Devanagari Sanskrit, transliteration, synonyms, purport, or any vedabase.io URL.',
+      '4. Cite 1 to 3 verses total. Do not dump a list of sources.',
+      '5. Keep the answer focused and well under 400 words.',
+      '6. Do NOT end with "Sources:", "References:", "Recommended reading", "Further reading", or any such section.',
+      '7. Do NOT add URLs of any kind.',
       '',
       `Question: ${title}`,
       `Details: ${body}`,
       '',
-      'SCRIPTURE REFERENCE (include when relevant):',
-      verseContext || 'No specific verses found in the database for this topic. Answer from your general knowledge.'
+      'REFERENCE MATERIAL (use only the translation lines below; ignore Sanskrit / URL fields):',
+      verseContext || 'No specific verses found. Answer from your general knowledge of Hindu scripture.'
     ].join('\n');
 
     let aiMessage = '';
@@ -128,7 +127,7 @@ async function generateAIAnswer(questionId, title, body) {
         const completion = await groq.chat.completions.create({
           messages: [{ role: 'user', content: prompt }],
           model: 'llama-3.1-8b-instant',
-          max_tokens: 2000,
+          max_tokens: 1200,
           temperature: 0.7
         });
         aiMessage = completion.choices[0].message.content;
@@ -151,6 +150,32 @@ async function generateAIAnswer(questionId, title, body) {
     }
 
     if (!aiMessage) return;
+
+    // Post-process: scrub anything that violates the output format.
+    // 1. Remove fenced code blocks entirely (```...```)
+    aiMessage = aiMessage.replace(/```[\s\S]*?```/g, '');
+    // 2. Remove inline code with backticks (Devanagari, technical tokens)
+    aiMessage = aiMessage.replace(/`+[^`]*`+/g, '');
+    // 3. Remove any URLs
+    aiMessage = aiMessage.replace(/https?:\/\/\S+/g, '');
+    // 4. Remove "vedabase.io" / "vedabase" mentions and surrounding path
+    aiMessage = aiMessage.replace(/vedabase\.io[^\s)"]*/gi, '');
+    // 5. Remove "Sanskrit:", "Transliteration:", "Synonyms:", "Purport:", "Source:" lines
+    aiMessage = aiMessage.replace(/(^|\n)\s*(Sanskrit|Transliteration|Synonyms|Purport|Source|URL|Reference|स्रोत|अनुवाद|IAST)[:：][^\n]*(\n|$)/gi, '\n');
+    // 6. Remove "Sources / References / Recommended reading / Further reading" trailing blocks
+    aiMessage = aiMessage.replace(/(?:^|\n)(?:Sources?|References?|Recommended reading|Further reading|To learn more|You can also read|For deeper|Please read the full purport|Related verses)[\s\S]*$/gim, '');
+    // 7. Drop bare "Translation" prefix when it appears at the start of a line
+    aiMessage = aiMessage.replace(/(^|\n)\s*Translation\s*[:：]?\s*/g, '$1');
+    // 8. Collapse extra blank lines
+    aiMessage = aiMessage.replace(/\n{3,}/g, '\n\n').trim();
+    // 9. Cap length to 1200 chars
+    if (aiMessage.length > 1200) aiMessage = aiMessage.slice(0, 1200).replace(/\s+\S*$/, '') + '…';
+
+    // Append the standard disclaimer
+    aiMessage +=
+      '\n\n---\n' +
+      '_This answer was generated by an AI assistant drawing on the scripture corpus at vedabase.io. ' +
+      'It has not yet been reviewed or verified by a Pariprashna expert — you will be notified within 12 hours once a scholar reviews it._';
 
     // Create AI answer
     const aiAnswer = new Answer({

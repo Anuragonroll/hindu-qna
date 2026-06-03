@@ -23,6 +23,7 @@ import AIChat from './pages/AIChat';
 import ReviewQueues from './pages/ReviewQueues';
 import Bounties from './pages/Bounties';
 import AuthCallback from './pages/AuthCallback';
+import Scriptures from './pages/Scriptures';
 
 function App() {
   return (
@@ -50,6 +51,7 @@ function App() {
                 <Route path="/admin" element={<AdminPanel />} />
                 <Route path="/chat" element={<AIChat />} />
                 <Route path="/reviews" element={<ReviewQueues />} />
+                <Route path="/scriptures" element={<Scriptures />} />
                 <Route path="/bounties" element={<Bounties />} />
               </Routes>
             </main>

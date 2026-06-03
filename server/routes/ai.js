@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { MongoClient } = require('mongodb');
+const mongoose = require('mongoose');
 const AIChat = require('../models/AIChat');
 const Question = require('../models/Question');
 const { auth } = require('../middleware/auth');
@@ -17,15 +17,13 @@ if (process.env.GROQ_API_KEY) {
   groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 }
 
-// ─── MongoDB connection for vedabase database ────────────────────────────────
-let vedabaseClient;
+// ─── Vedabase database access via Mongoose's existing connection ─────────────
+// Uses mongoose.connection so we don't open a separate MongoClient per file
 let vedabaseDb;
 
-async function getVedabaseDB() {
+function getVedabaseDB() {
   if (!vedabaseDb) {
-    vedabaseClient = new MongoClient(process.env.MONGODB_URI);
-    await vedabaseClient.connect();
-    vedabaseDb = vedabaseClient.db('vedabase');
+    vedabaseDb = mongoose.connection.useDb('vedabase', { useCache: true });
   }
   return vedabaseDb;
 }
